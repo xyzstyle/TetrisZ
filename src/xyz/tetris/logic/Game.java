@@ -13,16 +13,13 @@ public class Game extends Thread implements Controls {
     private Block block;
     private DownBlockThread downBlockThread;
     private int score;
-    private boolean playing=true;
-    private Block nextBlock;
+    private boolean playing = true;
     private SetDatas setDatas;
 
-    public Game( int rows, int cols) {
+    public Game(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
-        //this.gameThread = gameThread;
         boxes = new Box[rows][cols];
-
         for (int i = 0; i < boxes.length; i++)
             for (int j = 0; j < boxes[i].length; j++) {
                 boxes[i][j] = new Box(false);
@@ -52,6 +49,7 @@ public class Game extends Thread implements Controls {
      */
     public int checkFullLine() {
         int count = 0;
+        int value=0;
         for (int i = 0; i < boxes.length; i++) {
             int row = -1;
             boolean fullLineBoxColor = true;
@@ -65,9 +63,10 @@ public class Game extends Thread implements Controls {
                 row = i;
                 removeLine(row);
                 count++;
+                value = value + (int)Math.pow((double)count,2d);
             }
         }
-        return count;
+        return value;
     }
 
     /**
@@ -75,7 +74,7 @@ public class Game extends Thread implements Controls {
      *
      * @param row int, 要清除的行
      */
-    public synchronized void removeLine(int row) {
+    private synchronized void removeLine(int row) {
         for (int i = row; i > 0; i--)
             for (int j = 0; j < boxes[i].length; j++) {
                 boxes[i][j] = (Box) boxes[i - 1][j].clone();
@@ -102,7 +101,7 @@ public class Game extends Thread implements Controls {
     }
 
     public void reset() {
-        for (int i = 0; i < boxes.length; i++) {
+       for (int i = 0; i < boxes.length; i++) {
             for (int j = 0; j < boxes[i].length; j++)
                 boxes[i][j].setColor(false);
         }
@@ -110,49 +109,13 @@ public class Game extends Thread implements Controls {
 
     }
 
-    public int getCols() {
-        return cols;
-    }
 
-    @Override
-    public void run() {
-        int col = (int) (Math.random() * (getCols() - 3));
-        int style = (int) Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
-        while (playing) {
-            if (block != null) {// 第一次循环时，block为空
-                if (downBlockThread.isAlive()) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                    continue;
-                }
-            }
-            int increase = checkFullLine();
-            if (increase != 0) {
-                score += increase;
-                setDatas.setScore(score);
-            }
-            if (isGameOver()) {
-                // 下面注释的语句要修改
-                // JOptionPane.showMessageDialog(boxContainer, "Game Over!");
-                return;
-            }
-            block = nextBlock;
-            downBlockThread = new DownBlockThread();
-            downBlockThread.start();
-            col = (int) (Math.random() * (getCols() - 3));
-            style = (int) Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
-            nextBlock=new Block(col,-1,style);
 
-            setDatas.setNextBlocks(nextBlock.getBoxes());
-        }
-    }
+
 
     private synchronized boolean MoveBlockTo(int newRow, int newCol) {
         if (!isMoveAble(newRow, newCol)) return false;
-        earse();
+        erase();
         block.setX(newCol);
         block.setY(newRow);
         display();
@@ -162,7 +125,7 @@ public class Game extends Thread implements Controls {
     }
 
     private boolean isMoveAble(int newRow, int newCol) {
-        earse();
+        erase();
         Box[][] blockBoxes = block.getBoxes();
         for (int i = 0; i < blockBoxes.length; i++)
             for (int j = 0; j < blockBoxes[i].length; j++) {
@@ -195,7 +158,7 @@ public class Game extends Thread implements Controls {
             }
     }
 
-    private void earse() {
+    private void erase() {
         Box[][] blockBoxes = block.getBoxes();
         for (int i = 0; i < blockBoxes.length; i++)
             for (int j = 0; j < blockBoxes[i].length; j++) {
@@ -208,22 +171,22 @@ public class Game extends Thread implements Controls {
             }
     }
 
-    public void moveBlockLeft() {
+    private void moveBlockLeft() {
         MoveBlockTo(block.getY(), block.getX() - 1);
     }
 
-    public void moveBlockRight() {
+    private void moveBlockRight() {
         MoveBlockTo(block.getY(), block.getX() + 1);
     }
 
-    public void moveBlockDown() {
+    private void moveBlockDown() {
         MoveBlockTo(block.getY() + 1, block.getX());
     }
 
     /**
      * 块变形
      */
-    public void turnBlockStyle() {
+    private void turnBlockStyle() {
         for (int i = 0; i < BLOCK_KIND_NUMBER; i++)
             for (int j = 0; j < BLOCK_STATUS_NUMBER; j++) {
                 if (STYLES[i][j] == block.getStyle()) {
@@ -241,7 +204,7 @@ public class Game extends Thread implements Controls {
      * return boolean,true-能改变，false-不能改变
      */
     private boolean isTurnAble(int newStyle) {
-        earse();
+        erase();
         int key = Block.KEY;
         Box[][] blockBoxes = block.getBoxes();
         for (int i = 0; i < blockBoxes.length; i++)
@@ -263,15 +226,14 @@ public class Game extends Thread implements Controls {
      * 将当前块变成newStyle所指定的块样式
      *
      * @param newStyle int,将要改变成的块样式，对应STYLES的28个值中的一个
-     * @return boolean, true-改变成功，false-改变失败
+     *                 return boolean, true-改变成功，false-改变失败
      */
-    private boolean turnTo(int newStyle) {
-        if (!isTurnAble(newStyle)) return false;
-        earse();
+    private void turnTo(int newStyle) {
+        if (!isTurnAble(newStyle)) return;
+        erase();
         block.setStyle(newStyle);
         display();
         refresh();
-        return true;
     }
 
     public void setGetDatas(SetDatas setDatas) {
@@ -291,7 +253,6 @@ public class Game extends Thread implements Controls {
                 moveBlockLeft();
                 break;
             case 4:
-                System.out.println("turn");
                 turnBlockStyle();
                 break;
             default:
@@ -310,7 +271,14 @@ public class Game extends Thread implements Controls {
 
     }
 
+
+
     private class DownBlockThread extends Thread {
+
+        public boolean isMoving() {
+            return moving;
+        }
+
         private boolean moving = true;
 
         @Override
@@ -327,5 +295,50 @@ public class Game extends Thread implements Controls {
             }
         }
 
+    }
+
+
+    @Override
+    public void run() {
+        int col = (int) (Math.random() * (cols - 3));
+        int style =  Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
+        while (playing) {
+            if (block != null) {// 第一次循环时，block为空
+                if (downBlockThread.isMoving()) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ie) {
+                        ie.printStackTrace();
+                    }
+                    continue;
+                }
+            }
+            int increase = checkFullLine();
+            if (increase != 0) {
+                score += increase;
+                setDatas.setScore(score);
+            }
+            if (isGameOver()) {
+                // 下面注释的语句要修改
+                // JOptionPane.showMessageDialog(boxContainer, "Game Over!");
+                return;
+            }
+
+
+//            if(downBlockThread!=null&&downBlockThread.isMoving()){
+//                continue;
+//            }
+            block = new Block(col, -1, style);
+            downBlockThread = new DownBlockThread();
+            downBlockThread.start();
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+            col = (int) (Math.random() * (cols - 3));
+            style = Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
+            setDatas.setNextBlocks(block.getBoxes());
+        }
     }
 }
