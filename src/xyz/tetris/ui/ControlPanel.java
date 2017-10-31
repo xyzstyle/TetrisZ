@@ -137,6 +137,7 @@ public class ControlPanel extends JPanel {
 			super.paintComponent(g);
 			if (!isTiped)
 				fanning();
+			if(block==null)return;
 			
 			for (int i = 0; i < block.length; i++)
 				for (int j = 0; j < block[i].length; j++) {

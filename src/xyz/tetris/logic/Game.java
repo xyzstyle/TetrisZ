@@ -3,6 +3,8 @@ package xyz.tetris.logic;
 import xyz.tetris.ifs.Controls;
 import xyz.tetris.ifs.SetDatas;
 
+import javax.swing.*;
+
 import static xyz.tetris.logic.Block.BLOCK_KIND_NUMBER;
 import static xyz.tetris.logic.Block.BLOCK_STATUS_NUMBER;
 import static xyz.tetris.logic.Block.STYLES;
@@ -11,7 +13,6 @@ public class Game extends Thread implements Controls {
     private Box[][] boxes;
     private int rows, cols;
     private Block block;
-    private DownBlockThread downBlockThread;
     private int score;
     private boolean playing = true;
     private SetDatas setDatas;
@@ -273,46 +274,23 @@ public class Game extends Thread implements Controls {
 
 
 
-    private class DownBlockThread extends Thread {
-
-        public boolean isMoving() {
-            return moving;
-        }
-
-        private boolean moving = true;
-
-        @Override
-        public void run() {
-            while (moving) {
-
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ie) {
-                    ie.printStackTrace();
-                }
-                moving = (MoveBlockTo(block.getY() + 1, block.getX()) && moving);
-                //System.out.println("#");
-            }
-        }
-
-    }
-
 
     @Override
     public void run() {
         int col = (int) (Math.random() * (cols - 3));
         int style =  Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
+        boolean isFalling=true;
         while (playing) {
-            if (block != null) {// 第一次循环时，block为空
-                if (downBlockThread.isMoving()) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    }
-                    continue;
+            if (block != null&& isFalling==true) {// 第一次循环时，block为空
+                isFalling= MoveBlockTo(block.getY() + 1, block.getX());
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
                 }
+                continue;
             }
+
             int increase = checkFullLine();
             if (increase != 0) {
                 score += increase;
@@ -320,22 +298,11 @@ public class Game extends Thread implements Controls {
             }
             if (isGameOver()) {
                 // 下面注释的语句要修改
-                // JOptionPane.showMessageDialog(boxContainer, "Game Over!");
+                //JOptionPane.showMessageDialog(boxContainer, "Game Over!");
                 return;
             }
-
-
-//            if(downBlockThread!=null&&downBlockThread.isMoving()){
-//                continue;
-//            }
             block = new Block(col, -1, style);
-            downBlockThread = new DownBlockThread();
-            downBlockThread.start();
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
+            isFalling=true;
             col = (int) (Math.random() * (cols - 3));
             style = Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
             setDatas.setNextBlocks(block.getBoxes());
