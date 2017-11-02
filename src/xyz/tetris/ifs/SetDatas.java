@@ -7,5 +7,6 @@ public interface SetDatas {
 	public void setPaint(Box[][] boxes);
 	public void setNextBlocks(Box[][] block);
 	public void setScore(long score);
+	public void gameOver();
 
 }

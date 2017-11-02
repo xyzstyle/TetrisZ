@@ -1,30 +1,28 @@
 package xyz.tetris.logic;
 
-import xyz.tetris.ifs.Controls;
 import xyz.tetris.ifs.SetDatas;
-
-import javax.swing.*;
 
 import static xyz.tetris.logic.Block.BLOCK_KIND_NUMBER;
 import static xyz.tetris.logic.Block.BLOCK_STATUS_NUMBER;
 import static xyz.tetris.logic.Block.STYLES;
 
-public class Game extends Thread implements Controls {
+public class Game extends Thread {
     private Box[][] boxes;
     private int rows, cols;
     private Block block;
     private int score;
     private boolean playing = true;
     private SetDatas setDatas;
+    private Block nextBlock;
+    private boolean isWaiting = false;
+    private final String control = "";
+    private int sleepTime=600;
 
     public Game(int rows, int cols) {
         this.rows = rows;
         this.cols = cols;
         boxes = new Box[rows][cols];
-        for (int i = 0; i < boxes.length; i++)
-            for (int j = 0; j < boxes[i].length; j++) {
-                boxes[i][j] = new Box(false);
-            }
+        initBoxes();
     }
 
 
@@ -50,7 +48,7 @@ public class Game extends Thread implements Controls {
      */
     public int checkFullLine() {
         int count = 0;
-        int value=0;
+        int value = 0;
         for (int i = 0; i < boxes.length; i++) {
             int row = -1;
             boolean fullLineBoxColor = true;
@@ -64,7 +62,7 @@ public class Game extends Thread implements Controls {
                 row = i;
                 removeLine(row);
                 count++;
-                value = value + (int)Math.pow((double)count,2d);
+                value = value + (int) Math.pow((double) count, 2d);
             }
         }
         return value;
@@ -101,17 +99,22 @@ public class Game extends Thread implements Controls {
         return false;
     }
 
-    public void reset() {
-       for (int i = 0; i < boxes.length; i++) {
+    private void initBoxes() {
+        for (int i = 0; i < boxes.length; i++) {
+            for (int j = 0; j < boxes[i].length; j++) {
+                boxes[i][j]=new Box(false);
+
+            }
+
+        }
+
+    }
+    private void resetBoxes() {
+        for (int i = 0; i < boxes.length; i++) {
             for (int j = 0; j < boxes[i].length; j++)
                 boxes[i][j].setColor(false);
         }
-
-
     }
-
-
-
 
 
     private synchronized boolean MoveBlockTo(int newRow, int newCol) {
@@ -121,7 +124,6 @@ public class Game extends Thread implements Controls {
         block.setY(newRow);
         display();
         refresh();
-        //注意相关功能移动到GameCanvas中：canvas.repaint();
         return true;
     }
 
@@ -241,9 +243,40 @@ public class Game extends Thread implements Controls {
         this.setDatas = setDatas;
     }
 
-    @Override
-    public void ctlDirection(int dir) {
-        switch (dir) {
+
+    public void setLevel(int level) {
+        if (level < 1 || level > 10) {
+            return;
+        }
+        sleepTime=600-level*50;
+    }
+
+
+    public void ctrlGame(int method) {
+
+        switch (method) {
+            case 1:
+                isWaiting = true;
+                break;
+            case 2:
+                isWaiting = false;
+                synchronized (control) {
+                    control.notifyAll();
+                }
+                break;
+            case 3:
+                playing = false;
+                resetBoxes();
+                setDatas.setPaint(boxes);
+                break;
+
+        }
+
+
+    }
+
+    public void ctrlBlock(int variety) {
+        switch (variety) {
             case 1:
                 moveBlockRight();
                 break;
@@ -259,35 +292,37 @@ public class Game extends Thread implements Controls {
             default:
                 break;
         }
-
     }
-
-    @Override
-    public void ctlGrade(int grade) {
-
-    }
-
-    @Override
-    public void ctlGame(int game) {
-
-    }
-
-
-
 
     @Override
     public void run() {
         int col = (int) (Math.random() * (cols - 3));
-        int style =  Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
-        boolean isFalling=true;
+        int style = Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
+        boolean isFalling = true;
+        nextBlock = new Block();
         while (playing) {
-            if (block != null&& isFalling==true) {// 第一次循环时，block为空
-                isFalling= MoveBlockTo(block.getY() + 1, block.getX());
+            if (isWaiting) {
+                synchronized (control) {
+                    try {
+                        control.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            if (block != null && isFalling) {// 第一次循环时，block为空
+
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(sleepTime);
                 } catch (InterruptedException ie) {
                     ie.printStackTrace();
                 }
+//                if (isWaiting){
+//                    System.out.println("waiting");
+//                    Thread.yield();
+//                }
+
+                isFalling = MoveBlockTo(block.getY() + 1, block.getX());
                 continue;
             }
 
@@ -297,15 +332,16 @@ public class Game extends Thread implements Controls {
                 setDatas.setScore(score);
             }
             if (isGameOver()) {
-                // 下面注释的语句要修改
-                //JOptionPane.showMessageDialog(boxContainer, "Game Over!");
+                setDatas.gameOver();
                 return;
             }
             block = new Block(col, -1, style);
-            isFalling=true;
+            refresh();
+            isFalling = true;
             col = (int) (Math.random() * (cols - 3));
             style = Block.STYLES[(int) (Math.random() * 7)][(int) (Math.random() * 4)];
-            setDatas.setNextBlocks(block.getBoxes());
+            nextBlock.setStyle(style);
+            setDatas.setNextBlocks(nextBlock.getBoxes());
         }
     }
 }

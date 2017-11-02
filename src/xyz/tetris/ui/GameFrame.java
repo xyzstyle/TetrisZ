@@ -6,6 +6,7 @@ package xyz.tetris.ui;
 import xyz.tetris.ifs.SetDatas;
 import xyz.tetris.logic.Box;
 import xyz.tetris.logic.Game;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
@@ -21,7 +22,7 @@ import java.awt.event.ComponentEvent;
 /**
  * 游戏的窗体类
  */
-public class GameFrame extends JFrame implements SetDatas {
+public class GameFrame extends JFrame implements SetDatas, GameFunction {
 
     /**
      *
@@ -44,12 +45,12 @@ public class GameFrame extends JFrame implements SetDatas {
 
         mainMenu = new MainMenu(this);
         gameCanvas = new GameCanvas(20, 12);
-        ctrlPanel = new ControlPanel();
+        ctrlPanel = new ControlPanel(this);
         setLayout(new BorderLayout(6, 0));
         setJMenuBar(mainMenu);
         add(gameCanvas, BorderLayout.CENTER);
         add(ctrlPanel, BorderLayout.EAST);
-        setSize(315, 392);
+        setSize(315, 422);
         /**
          * 窗体居中，获取屏幕的宽度减去窗体的宽度除2作为窗体左上角的横坐标， 获取屏幕的高度减去窗体的高度除2作为窗体左上角的纵坐标
          */
@@ -66,7 +67,7 @@ public class GameFrame extends JFrame implements SetDatas {
         });
         this.setVisible(true);
         // 开始游戏
-        play();
+        startGame();
     }
 
 
@@ -75,18 +76,6 @@ public class GameFrame extends JFrame implements SetDatas {
 
     }
 
-    // 运行游戏
-    public void play() {
-        // 场景重置，也就是清场
-        // 创建游戏线程对象，并使对象就绪
-
-        game = new Game(20, 12);
-        game.setGetDatas(this);
-        game.start();
-        ctrlPanel.setControls(game);
-        //ctrlPanel.setGame(gameThread);// 说明其作用
-        //ctrlPanel.requestFocus();// 说明其作用
-    }
 
     /**
      * 根据字串设置窗口外观
@@ -118,5 +107,59 @@ public class GameFrame extends JFrame implements SetDatas {
     public void setScore(long score) {
         ctrlPanel.setScore(score);
 
+    }
+
+    @Override
+    public void gameOver() {
+        JOptionPane.showMessageDialog(this, "Game Over!");
+    }
+
+    @Override
+    public void startGame() {
+        // 场景重置，也就是清场
+        // 创建游戏线程对象，并使对象就绪
+        if (game!=null&&game.isAlive()) return;
+        game = new Game(20, 12);
+        game.setGetDatas(this);
+        game.start();
+        //ctrlPanel.setGameFunction(this);
+        //ctrlPanel.setGame(gameThread);// 说明其作用
+        //ctrlPanel.requestFocus();// 说明其作用
+    }
+
+    @Override
+    public void pauseGame() {
+
+        game.ctrlGame(1);
+    }
+
+    @Override
+    public void resumeGame() {
+        game.ctrlGame(2);
+    }
+
+    @Override
+    public void stopGame() {
+        game.ctrlGame(3);
+    }
+
+    @Override
+    public void setLevel(int level) {
+        game.setLevel(level);
+    }
+
+    @Override
+    public void setFrontColor() {
+
+    }
+
+    @Override
+    public void setBackColor() {
+
+    }
+
+    @Override
+    public void ctrlBlock(int variety) {
+        game.ctrlBlock(variety);
     }
 }
