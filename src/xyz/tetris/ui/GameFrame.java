@@ -118,7 +118,7 @@ public class GameFrame extends JFrame implements SetDatas, GameFunction {
     public void startGame() {
         // 场景重置，也就是清场
         // 创建游戏线程对象，并使对象就绪
-        if (game!=null&&game.isAlive()) return;
+        if (game != null && game.isAlive()) return;
         game = new Game(20, 12);
         game.setGetDatas(this);
         game.start();
@@ -150,12 +150,20 @@ public class GameFrame extends JFrame implements SetDatas, GameFunction {
 
     @Override
     public void setFrontColor() {
-
+        Color newFrontColor =
+                JColorChooser.showDialog(this,
+                        "Set color for block", gameCanvas.getFrontColor());
+        if (newFrontColor != null)
+            gameCanvas.setFrontColor(newFrontColor);
     }
 
     @Override
     public void setBackColor() {
-
+        Color newBackColor =
+                JColorChooser.showDialog(this,
+                        "Set color for BackGround", gameCanvas.getBackColor());
+        if (newBackColor != null)
+            gameCanvas.setBackColor(newBackColor);
     }
 
     @Override

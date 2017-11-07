@@ -1,7 +1,6 @@
 package xyz.tetris.ui;
 
 import xyz.tetris.logic.Box;
-
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
@@ -18,12 +17,19 @@ import java.awt.event.KeyEvent;
 public class ControlPanel extends JPanel implements ActionListener {
 
 
-    private JLabel nextBlockLbl = new JLabel("下一个方块"), levelLbl = new JLabel("级      数"), scoreLbl = new JLabel("分      数");
+    private JLabel nextBlockLbl = new JLabel("下一个方块");
+    private JLabel levelLbl = new JLabel("级      数");
+    private JLabel scoreLbl = new JLabel("分      数");
 
-    private JTextField levelTxt = new JTextField("1"), scoreTxt = new JTextField("0");
+    private JTextField levelTxt = new JTextField("1");
+    private JTextField scoreTxt = new JTextField("0");
 
-    private JButton startBtn = new JButton("开     始"), pauseBtn = new JButton("暂    停"), resumeBtn = new JButton("恢    复"),
-            stopBtn = new JButton("结    束"),turnLevelUpBtn = new JButton("升一级"), turnLevelDownBtn = new JButton("降一级");
+    private JButton startBtn = new JButton("开     始");
+    private JButton pauseBtn = new JButton("暂    停");
+    private JButton resumeBtn = new JButton("恢    复");
+    private JButton stopBtn = new JButton("结    束");
+    private JButton turnLevelUpBtn = new JButton("升一级");
+    private JButton turnLevelDownBtn = new JButton("降一级");
 
     private JPanel topPanel = new JPanel(new BorderLayout());
     private NextPanel nextPanel = new NextPanel();

@@ -24,7 +24,7 @@ public class GameCanvas extends JPanel {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -4404105899812081169L;
+
 	private Color backColor = Color.blue, frontColor = Color.ORANGE;
 	
 

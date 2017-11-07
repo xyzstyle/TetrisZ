@@ -37,8 +37,6 @@ public class Box implements Cloneable{
 	 * 覆盖Object的Object clone()，实现克隆
 	 * @return Object,克隆的结果
 	 */
-
-	
 	
 	public Object clone(){
 		Object cloned=null;
